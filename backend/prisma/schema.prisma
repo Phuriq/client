@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  userName     String        @unique
+  userPhone    String
+  userEmail    String        @unique
+  userPassword String
+  reservations Reservation[]
+}
+
+model Theater {
+  id              Int     @id @default(autoincrement())
+  theaterName     String
+  theaterLocation String
+  rounds          Round[]
+  seats           Seat[]
+}
+
+model Seat {
+  id           Int           @id @default(autoincrement())
+  seatNumber   Int
+  theaterId    Int
+  reservations Reservation[]
+  theater      Theater       @relation(fields: [theaterId], references: [id])
+
+  @@index([theaterId], map: "Seat_theaterId_fkey")
+}
+
+model Round {
+  id           Int           @id @default(autoincrement())
+  movieId      Int
+  theaterId    Int
+  roundStart   DateTime
+  roundEnd     DateTime
+  reservations Reservation[]
+  theater      Theater       @relation(fields: [theaterId], references: [id])
+
+  @@index([movieId], map: "Round_movieId_fkey")
+  @@index([theaterId], map: "Round_theaterId_fkey")
+}
+
+model Reservation {
+  id            Int           @id @default(autoincrement())
+  roundId       Int
+  userId        Int?
+  paymentStatus PaymentStatus @default(UNDONE)
+  seatAmount    Int
+  seatId        Int
+  round         Round         @relation(fields: [roundId], references: [id])
+  seat          Seat          @relation(fields: [seatId], references: [id])
+  user          User?         @relation(fields: [userId], references: [id])
+
+  @@index([roundId], map: "Reservation_roundId_fkey")
+  @@index([seatId], map: "Reservation_seatId_fkey")
+  @@index([userId], map: "Reservation_userId_fkey")
+}
+
+model movie {
+  id               Int    @id @default(autoincrement())
+  movieName        String
+  movieReleaseDate String
+  movieHour        Int
+  movieTitle       String
+}
+
+enum PaymentStatus {
+  UNDONE
+  DONE
+}
